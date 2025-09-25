@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <string.h>
+#include "scanner.h"
 
 #define LINE_BUFFER_SIZE 1028
 
@@ -25,10 +26,18 @@ int main(void) {
         printf("> ");
         size_t line_length = read_line(line_buffer);
 
-        if (strncmp(line_buffer, "quit", LINE_BUFFER_SIZE) == 0) 
+        if (strncmp(line_buffer, "quit", 4) == 0) 
             break;
 
-        fwrite(line_buffer, sizeof(char), line_length, stdout);
-        fflush(stdout);
+        Token *token_list = lisp_tokenize(line_buffer, line_length);
+        
+        for (Token *tok = token_list; tok != NULL; tok = tok->next) {
+            printf("{ type: %s, length: %u, lexeme: ", token_name(tok), tok->length);
+
+            for (size_t i = 0; i < tok->length; ++i)
+                putchar(tok->start[i]);
+
+            puts("}");
+        }
     }
 }

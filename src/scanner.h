@@ -21,4 +21,10 @@ typedef struct Token {
 
 extern Token *lisp_tokenize(char *source, size_t length);
 
+#ifdef LISP_DEBUG
+
+extern const char *token_name(Token *token);
+
+#endif
+
 #endif
