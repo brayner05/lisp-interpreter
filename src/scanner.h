@@ -12,10 +12,13 @@ typedef enum {
 } TokenType;
 
 typedef struct Token {
+    TokenType type;
     char *start;
     size_t length;
     struct Token *next;
     struct Token *prev;
 } Token;
+
+extern Token *lisp_tokenize(char *source, size_t length);
 
 #endif
