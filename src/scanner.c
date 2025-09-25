@@ -10,9 +10,11 @@ static uint64_t current = 0;
 static uint64_t start = 0;
 static Token *token_list = NULL;
 static Token *token_list_end = NULL;
+static Token eof_token = { .type = TOKEN_EOF, .length = 0, .next = NULL, .prev = NULL, .start = NULL };
 
 #ifdef LISP_DEBUG
 
+/// @brief A map containing stringified names for each type of token.
 static const char *token_names[] = {
     [TOKEN_LPAREN] = "LPAREN",
     [TOKEN_RPAREN] = "RPAREN",
@@ -71,20 +73,6 @@ static Token *create_token(TokenType type) {
     return token;
 }
 
-static bool append_eof_token(void) {
-    Token *eof_token = (Token *) malloc(sizeof(Token));
-    if (eof_token == NULL)
-        return false;
-
-    eof_token->next = eof_token->prev = NULL;
-    eof_token->type = TOKEN_EOF;
-    eof_token->start = NULL;
-    eof_token->length = 0;
-    append_token(eof_token);
-
-    return true;
-}
-
 static char peek(void) {
     if (!has_next())
         return '\0';
@@ -96,9 +84,11 @@ static char next(void) {
 }
 
 static void scan_number(void) {
+    // Read until finding a non-digit character.
     while (has_next() && isdigit(peek())) 
         next();
 
+    // If the character is a dot, pass it, and continue reading digits.
     if (has_next() && peek() == '.') {
         next();
         while (has_next() && isdigit(peek())) 
@@ -179,6 +169,6 @@ extern Token *lisp_tokenize(char *source, size_t length) {
         start = current;
     }
 
-    append_eof_token();
+    append_token(&eof_token);
     return token_list;
 }
