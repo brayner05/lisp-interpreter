@@ -1,12 +1,12 @@
 #include <stdio.h>
 #include <string.h>
-#include "scanner.h"
+#include "scanner/scanner.h"
 
 #define LINE_BUFFER_SIZE 1028
 
 /// @brief Reads a line into `line_buffer` from STDIN.
 /// @param line_buffer The buffer in which to store the characters read from STDIN.
-/// @return The nuumber of characters read.
+/// @return The number of characters read.
 static size_t read_line(char line_buffer[LINE_BUFFER_SIZE]) {
     size_t line_length = 0;
 
@@ -29,8 +29,13 @@ int main(void) {
         if (strncmp(line_buffer, "quit", 4) == 0) 
             break;
 
-        Token *token_list = lisp_tokenize(line_buffer, line_length);
-        
+        ScanResult result = lisp_tokenize(line_buffer, line_length);
+        if (!result.success) {
+            puts(result.error.message);
+            continue;
+        }
+
+        Token *token_list = result.token_list;
         for (Token *tok = token_list; tok != NULL; tok = tok->next) {
             printf("{ type: %s, length: %u, lexeme: ", token_name(tok), tok->length);
 
