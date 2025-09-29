@@ -31,7 +31,7 @@ int main(void) {
 
         ScanResult result = lisp_tokenize(line_buffer, line_length);
         if (!result.success) {
-            puts(result.error.message);
+            printf("%s: '%c' @ column: %u\n", result.error.message, line_buffer[result.error.column], result.error.column + 1);
             continue;
         }
 

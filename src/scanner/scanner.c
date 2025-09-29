@@ -51,6 +51,17 @@ inline static TokenType keyword(const char *keyword_lexeme, size_t lexeme_length
         return TOKEN_IDENTIFIER;
 }
 
+inline static ScanResult reject(char *message) {
+    Error error = { .message = message, .column = start };
+    ScanResult result = { .success = false, .error = error };
+    return result;
+}
+
+inline static ScanResult accept(void) {
+    ScanResult result = { .success = true, .token_list = NULL };
+    return result;
+}
+
 static bool has_next(void) {
     return current < source_length;
 }
@@ -96,7 +107,7 @@ static char next(void) {
     return source_str[current++];
 }
 
-static void scan_number(void) {
+static ScanResult scan_number(void) {
     // Read until finding a non-digit character.
     while (has_next() && isdigit(peek())) 
         next();
@@ -104,31 +115,30 @@ static void scan_number(void) {
     // If the character is a dot, pass it, and continue reading digits.
     if (has_next() && peek() == '.') {
         next();
-        while (has_next() && isdigit(peek())) 
-            next();
+        if (!has_next() || !isdigit(peek()))
+            return reject("Expected digit after '.'");
+
+        while (has_next() && isdigit(peek())) next();
     }
 
     Token *token = create_token(TOKEN_NUMBER);
     append_token(token);
+
+    return accept();
 }
 
 static ScanResult scan_string(void) {
     while (has_next() && peek() != '\"')
         next();
     
-    if (!has_next()) {
-        Error error = { .message = "Unterminated string" };
-        ScanResult result = { .success = false, .error = error };
-        return result;
-    }
+    if (!has_next())
+        return reject("Unterminated string");
 
     next();
-
     Token *token = create_token(TOKEN_STRING);
     append_token(token);
 
-    ScanResult success = { .success = true, .token_list = NULL };
-    return success;
+    return accept();
 }
 
 static void scan_identifier(void) {
@@ -193,7 +203,10 @@ static ScanResult scan_next(void) {
 
         default: {
             if (isdigit(ch)) {
-                scan_number();
+                ScanResult result = scan_number();
+                if (!result.success)
+                    return result;
+
                 break;
             }
 
@@ -202,24 +215,20 @@ static ScanResult scan_next(void) {
                 break;
             }
 
-            break;
+            return reject("Unexpected token");
         }
     }
 
     if (token != NULL)
         append_token(token);
 
-    ScanResult success = { .success = true, .token_list = NULL };
-    return success;
+    return accept();
 }
 
 extern ScanResult lisp_tokenize(char *source, size_t length) {
     // Disallow NULL.
-    if (source == NULL) {
-        Error null_error = { .message = "Source string is NULL." };
-        ScanResult result = { .success = false, .error = null_error };
-        return result;
-    }
+    if (source == NULL)
+        return reject("Source string is NULL.");
 
     // Initialize the lexer.
     source_str = source;
@@ -236,7 +245,6 @@ extern ScanResult lisp_tokenize(char *source, size_t length) {
     }
 
     append_token(&eof_token);
-
     ScanResult success_result = { .success = true, .token_list = token_list };
     return success_result;
 }
