@@ -93,6 +93,7 @@ static Token *create_token(TokenType type) {
     token->start = &source_str[start];
     token->length = current - start;
     token->next = token->prev = NULL;
+    token->column = start;
 
     return token;
 }

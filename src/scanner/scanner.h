@@ -19,6 +19,7 @@ typedef struct Token {
     size_t length;
     struct Token *next;
     struct Token *prev;
+    uint32_t column;
 } Token;
 
 typedef struct ScanResult {
