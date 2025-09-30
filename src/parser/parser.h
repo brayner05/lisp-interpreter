@@ -5,15 +5,19 @@
 
 struct Expression;
 
-typedef enum Operator {
-    OPERATOR_PLUS, OPERATOR_MINUS,
-    OPERATOR_MULT, OPERATOR_DIV,
-    OPERATOR_PRINT
-} Operator;
+typedef struct ParserResult {
+    bool success;
+    union {
+        struct Expression *root_node;
+        Error error;
+    };
+} ParserResult;
+
 
 typedef struct Operation {
-    enum Operator operation;
+    TokenType operation;
     struct Expression *operand_list;
+    struct Expression *last_operand;
 } Operation;
 
 typedef enum OperandType {
@@ -55,6 +59,6 @@ typedef struct Expression {
     };
 } Expression;
 
-extern Expression evaluate(Token *token_list);
+extern ParserResult evaluate(Token *token_list);
 
 #endif

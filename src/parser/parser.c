@@ -12,23 +12,59 @@ inline static Token *peek(void) {
     return next_token;
 }
 
-static void consume(TokenType type, char *error_message) {
-    if (peek()->type == type)
-        return; // Success
-    else
-        return; // Error
+inline static ParserResult error(char *message) {
+    Error error = { 
+        .column = peek() != NULL ? peek()->column : 0, 
+        .message = message 
+    };
+
+    ParserResult result = { 
+        .success = false, 
+        .error = error 
+    };
+
+    return result;
 }
 
-static Operation *operation(void) {
-
+inline static ParserResult success(void) {
+    ParserResult result = { .success = true, .root_node = NULL };
+    return result;
 }
 
-static Expression expression(void) {
-    consume(TOKEN_LPAREN, "Expected '('");
-    consume(TOKEN_RPAREN, "Expected ')'");
+static bool consume(TokenType type) {
+    if (peek() == NULL)
+        return false;
+
+    if (peek()->type != type)
+        return false;
+        
+    next();
+    return true;
 }
 
-extern Expression evaluate(Token *token_list) {
+static ParserResult operation(void) {
+    next();
+    return success();
+}
+
+static ParserResult expression(void) {
+    if (!consume(TOKEN_LPAREN))
+        return error("Expected '('");
+
+    switch (peek()->type) {
+        case TOKEN_PLUS:
+        case TOKEN_MINUS:
+        case TOKEN_ASTERISK:
+        case TOKEN_SLASH: {
+            return operation();
+        }
+    }
+
+    if (!consume(TOKEN_RPAREN))
+        return error("Expected ')'");
+}
+
+extern ParserResult evaluate(Token *token_list) {
     next_token = token_list;
     return expression();
 }
